@@ -4,95 +4,95 @@ import sys
 import subprocess
 
 
-def printline():
+def printLine():
     columns = os.getenv('COLUMNS', subprocess.check_output(['tput', 'cols']).decode().strip())
     print(' ' * int(columns))
 
 
-def recursively_create_directory(current_dirname):
-    if not os.path.isdir(current_dirname):
-        recursively_create_directory(os.path.dirname(current_dirname))
-        os.mkdir(current_dirname)
+def recursivelyCreateDirectory(currentDirname):
+    if not os.path.isdir(currentDirname):
+        recursivelyCreateDirectory(os.path.dirname(currentDirname))
+        os.mkdir(currentDirname)
 
 
-def recursively_create_directory_for_file(filepath):
-    recursively_create_directory(os.path.dirname(filepath))
+def recursivelyCreateDirectoryForFile(filepath):
+    recursivelyCreateDirectory(os.path.dirname(filepath))
 
 
-def clear_other_hard_links(file_to_clear_hardlinks):
-    inode_number = subprocess.check_output(['ls', '-i', file_to_clear_hardlinks]).decode().split()[0]
-    hard_link_references = subprocess.check_output(['find', '~', '/etc', '-inum', inode_number, '2>', '/dev/null']).decode().split()
+def clearOtherHardLinks(fileToClearHardLinks):
+    inodeNumber = subprocess.check_output(['ls', '-i', fileToClearHardLinks]).decode().split()[0]
+    hardLinkReferences = subprocess.check_output(['find', '~', '/etc', '-inum', inodeNumber, '2>', '/dev/null']).decode().split()
 
-    for file_reference in hard_link_references:
-        if os.path.realpath(file_reference) == os.path.realpath(file_to_clear_hardlinks):
-            print('Retain:', file_reference)
+    for fileReference in hardLinkReferences:
+        if os.path.realpath(fileReference) == os.path.realpath(fileToClearHardLinks):
+            print('Retain:', fileReference)
         else:
-            print('Delete:', file_reference)
-            subprocess.call(['sudo', 'rm', file_reference])
+            print('Delete:', fileReference)
+            subprocess.call(['sudo', 'rm', fileReference])
 
 
-def create_hard_link(config_file_name, config_file_dst):
+def createHardLink(configFileName, configFileDst):
     # TODO: Only use sudo if absolutely necessary
 
     # Evaluate ~
-    config_file_dst = os.path.expanduser(config_file_dst)
+    configFileDst = os.path.expanduser(configFileDst)
 
-    recursively_create_directory_for_file(config_file_dst)
-    src = os.path.realpath(config_file_name)
+    recursivelyCreateDirectoryForFile(configFileDst)
+    src = os.path.realpath(configFileName)
 
-    subprocess.call(['sudo', 'ln', '-i', src, config_file_dst])
+    subprocess.call(['sudo', 'ln', '-i', src, configFileDst])
 
 
-def hard_link_config_file(config_file_name, config_file_dst):
-    if os.path.isfile(config_file_name):
-        print("1) Clearing residual hard links for", config_file_name + '.')
-        clear_other_hard_links(config_file_name)
+def hardLinkConfigFile(configFileName, configFileDst):
+    if os.path.isfile(configFileName):
+        print("1) Clearing residual hard links for", configFileName + '.')
+        clearOtherHardLinks(configFileName)
         print()
 
-        print("2) Creating hard link:", config_file_name, '->', config_file_dst)
-        create_hard_link(config_file_name, config_file_dst)
+        print("2) Creating hard link:", configFileName, '->', configFileDst)
+        createHardLink(configFileName, configFileDst)
     else:
-        print(config_file_name, 'does not exist, skipping.')
+        print(configFileName, 'does not exist, skipping.')
 
 
-def pull_config_repo(repo_file_name, repo_http_url):
-    os.chdir(repo_file_name)
+def pullConfigRepo(repoFileName, repoHttpUrl):
+    os.chdir(repoFileName)
 
-    if os.path.isdir(repo_file_name):
-        print('Pulling config file changes from:', repo_http_url)
+    if os.path.isdir(repoFileName):
+        print('Pulling config file changes from:', repoHttpUrl)
         subprocess.call(['git', 'pull'])
         os.chdir('..')
     else:
-        print('Cloning repository at:', repo_http_url)
-        subprocess.call(['git', 'clone', repo_http_url])
+        print('Cloning repository at:', repoHttpUrl)
+        subprocess.call(['git', 'clone', repoHttpUrl])
 
 
-def try_hard_link_config_file_if_required(config_directory_line, repo_file_name):
-    config_file_name = os.path.join(repo_file_name, 'config_files', config_directory_line.split(',')[0])
-    config_file_dst = config_directory_line.split(',')[1]
-    config_file_required = config_directory_line.split(',')[2]
+def tryHardLinkConfigFileIfRequired(configDirectoryLine, repoFileName):
+    configFileName = os.path.join(repoFileName, 'configFiles', configDirectoryLine.split(',')[0])
+    configFileDst = configDirectoryLine.split(',')[1]
+    configFileRequired = configDirectoryLine.split(',')[2]
 
-    if config_file_required == 'y':
-        printline()
-        print('Processing:', config_file_name)
-        print('Destination:', config_file_dst)
-        printline()
+    if configFileRequired == 'y':
+        printLine()
+        print('Processing:', configFileName)
+        print('Destination:', configFileDst)
+        printLine()
 
-        hard_link_config_file(config_file_name, config_file_dst)
+        hardLinkConfigFile(configFileName, configFileDst)
     else:
-        printline()
-        print(config_file_name, 'not required, skipping.')
-        printline()
+        printLine()
+        print(configFileName, 'not required, skipping.')
+        printLine()
 
 
-def process_config_files(repo_http_url):
-    repo_file_name = os.path.splitext(os.path.basename(repo_http_url))[0]
-    pull_config_repo(repo_file_name, repo_http_url)
+def processConfigFiles(repoHttpUrl):
+    repoFileName = os.path.splitext(os.path.basename(repoHttpUrl))[0]
+    pullConfigRepo(repoFileName, repoHttpUrl)
 
-    with open(os.path.join(repo_file_name, 'config_directory.csv')) as f:
-        for config_directory_line in f:
-            try_hard_link_config_file_if_required(config_directory_line.strip(), repo_file_name)
+    with open(os.path.join(repoFileName, 'configDirectory.csv')) as f:
+        for configDirectoryLine in f:
+            tryHardLinkConfigFileIfRequired(configDirectoryLine.strip(), repoFileName)
 
 
 if __name__ == '__main__':
-    process_config_files(sys.argv[1])
+    processConfigFiles(sys.argv[1])
