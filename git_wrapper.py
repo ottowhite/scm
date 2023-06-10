@@ -3,6 +3,7 @@ import subprocess
 
 def pullOrCloneRepo(repoFileName, repoHttpUrl):
     if os.path.isdir(repoFileName):
+        return
         pullConfigRepo(repoFileName, repoHttpUrl)
     else:
         cloneConfigRepo(repoHttpUrl)
