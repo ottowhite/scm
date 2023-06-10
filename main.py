@@ -2,21 +2,35 @@
 import os
 import sys
 import subprocess
-from git_wrapper import pullOrCloneRepo
 
-def printLine():
-    columns = os.getenv('COLUMNS', subprocess.check_output(['tput', 'cols']).decode().strip())
-    print(' ' * int(columns))
+from git_wrapper import pullOrCloneRepo
+from text_processing import \
+    printLine, \
+    getConfigDirectoryCsvPathFromRepoName, \
+    getRepoNameFromGitUrl
+
+def main(repoHttpUrl):
+    repoName = getRepoNameFromGitUrl(repoHttpUrl)
+    pullOrCloneRepo(repoName, repoHttpUrl)
+
+    configDirectoryCsvPath = getConfigDirectoryCsvPathFromRepoName(repoName)
+
+    with open(configDirectoryCsvPath) as configDirectoryCsv:
+        for configDirectoryCsvLine in configDirectoryCsv:
+
+            configFileName = os.path.join(repoName, 'config_files', configDirectoryCsvLine.split(',')[0])
+            configFileDst = configDirectoryCsvLine.split(',')[1]
+            configFileRequired = configDirectoryCsvLine.split(',')[2]
+
+            tryHardLinkConfigFileIfRequired(configFileName, configFileDst, configFileRequired)
 
 def recursivelyCreateDirectory(currentDirname):
     if not os.path.isdir(currentDirname):
         recursivelyCreateDirectory(os.path.dirname(currentDirname))
         os.mkdir(currentDirname)
 
-
 def recursivelyCreateDirectoryForFile(filepath):
     recursivelyCreateDirectory(os.path.dirname(filepath))
-
 
 def clearOtherHardLinks(fileToClearHardLinks):
     inodeNumber = subprocess.check_output(['ls', '-i', fileToClearHardLinks]).decode().split()[0]
@@ -28,7 +42,6 @@ def clearOtherHardLinks(fileToClearHardLinks):
         else:
             print('Delete:', fileReference)
             subprocess.call(['sudo', 'rm', fileReference])
-
 
 def createHardLink(configFileName, configFileDst):
     # TODO: Only use sudo if absolutely necessary
@@ -54,11 +67,7 @@ def hardLinkConfigFile(configFileName, configFileDst):
         print(configFileName, 'does not exist, skipping.')
 
 
-def tryHardLinkConfigFileIfRequired(configDirectoryCsvLine, repoName):
-    configFileName = os.path.join(repoName, 'config_files', configDirectoryCsvLine.split(',')[0])
-    configFileDst = configDirectoryCsvLine.split(',')[1]
-    configFileRequired = configDirectoryCsvLine.split(',')[2]
-
+def tryHardLinkConfigFileIfRequired(configFileName, configFileDst, configFileRequired):
     if configFileRequired == 'y':
         printLine()
         print('Processing:', configFileName)
@@ -71,22 +80,5 @@ def tryHardLinkConfigFileIfRequired(configDirectoryCsvLine, repoName):
         print(configFileName, 'not required, skipping.')
         printLine()
 
-def getRepoNameFromGitUrl(repoHttpUrl):
-    return os.path.splitext(os.path.basename(repoHttpUrl))[0]
-
-def getConfigDirectoryCsvPathFromRepoName(repoName):
-    return os.path.join(repoName, 'config_directory.csv')
-
-def processConfigFiles(repoHttpUrl):
-    repoName = getRepoNameFromGitUrl(repoHttpUrl)
-    pullOrCloneRepo(repoName, repoHttpUrl)
-
-    configDirectoryCsvPath = getConfigDirectoryCsvPathFromRepoName(repoName)
-
-    with open(configDirectoryCsvPath) as configDirectoryCsv:
-        for configDirectoryCsvLine in configDirectoryCsv:
-            tryHardLinkConfigFileIfRequired(configDirectoryCsvLine.strip(), repoName)
-
-
 if __name__ == '__main__':
-    processConfigFiles(sys.argv[1])
+    main(sys.argv[1])
