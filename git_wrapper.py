@@ -1,7 +1,7 @@
 import os
 import subprocess
 
-def pullOrCloneConfigRepo(repoFileName, repoHttpUrl):
+def pullOrCloneRepo(repoFileName, repoHttpUrl):
     if os.path.isdir(repoFileName):
         pullConfigRepo(repoFileName, repoHttpUrl)
     else:

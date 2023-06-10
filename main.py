@@ -2,12 +2,11 @@
 import os
 import sys
 import subprocess
-from git_wrapper import pullOrCloneConfigRepo
+from git_wrapper import pullOrCloneRepo
 
 def printLine():
     columns = os.getenv('COLUMNS', subprocess.check_output(['tput', 'cols']).decode().strip())
     print(' ' * int(columns))
-
 
 def recursivelyCreateDirectory(currentDirname):
     if not os.path.isdir(currentDirname):
@@ -55,10 +54,10 @@ def hardLinkConfigFile(configFileName, configFileDst):
         print(configFileName, 'does not exist, skipping.')
 
 
-def tryHardLinkConfigFileIfRequired(configDirectoryLine, repoFileName):
-    configFileName = os.path.join(repoFileName, 'config_files', configDirectoryLine.split(',')[0])
-    configFileDst = configDirectoryLine.split(',')[1]
-    configFileRequired = configDirectoryLine.split(',')[2]
+def tryHardLinkConfigFileIfRequired(configDirectoryCsvLine, repoName):
+    configFileName = os.path.join(repoName, 'config_files', configDirectoryCsvLine.split(',')[0])
+    configFileDst = configDirectoryCsvLine.split(',')[1]
+    configFileRequired = configDirectoryCsvLine.split(',')[2]
 
     if configFileRequired == 'y':
         printLine()
@@ -72,15 +71,21 @@ def tryHardLinkConfigFileIfRequired(configDirectoryLine, repoFileName):
         print(configFileName, 'not required, skipping.')
         printLine()
 
+def getRepoNameFromGitUrl(repoHttpUrl):
+    return os.path.splitext(os.path.basename(repoHttpUrl))[0]
+
+def getConfigDirectoryCsvPathFromRepoName(repoName):
+    return os.path.join(repoName, 'config_directory.csv')
 
 def processConfigFiles(repoHttpUrl):
-    repoFileName = os.path.splitext(os.path.basename(repoHttpUrl))[0]
+    repoName = getRepoNameFromGitUrl(repoHttpUrl)
+    pullOrCloneRepo(repoName, repoHttpUrl)
 
-    pullOrCloneConfigRepo(repoFileName, repoHttpUrl)
+    configDirectoryCsvPath = getConfigDirectoryCsvPathFromRepoName(repoName)
 
-    with open(os.path.join(repoFileName, 'config_directory.csv')) as f:
-        for configDirectoryLine in f:
-            tryHardLinkConfigFileIfRequired(configDirectoryLine.strip(), repoFileName)
+    with open(configDirectoryCsvPath) as configDirectoryCsv:
+        for configDirectoryCsvLine in configDirectoryCsv:
+            tryHardLinkConfigFileIfRequired(configDirectoryCsvLine.strip(), repoName)
 
 
 if __name__ == '__main__':
