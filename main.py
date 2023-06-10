@@ -56,9 +56,8 @@ def hardLinkConfigFile(configFileName, configFileDst):
 
 
 def pullConfigRepo(repoFileName, repoHttpUrl):
-    os.chdir(repoFileName)
-
     if os.path.isdir(repoFileName):
+        os.chdir(repoFileName)
         print('Pulling config file changes from:', repoHttpUrl)
         subprocess.call(['git', 'pull'])
         os.chdir('..')
