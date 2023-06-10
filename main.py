@@ -2,7 +2,7 @@
 import os
 import sys
 import subprocess
-
+from git_wrapper import pullOrCloneConfigRepo
 
 def printLine():
     columns = os.getenv('COLUMNS', subprocess.check_output(['tput', 'cols']).decode().strip())
@@ -55,19 +55,8 @@ def hardLinkConfigFile(configFileName, configFileDst):
         print(configFileName, 'does not exist, skipping.')
 
 
-def pullConfigRepo(repoFileName, repoHttpUrl):
-    if os.path.isdir(repoFileName):
-        os.chdir(repoFileName)
-        print('Pulling config file changes from:', repoHttpUrl)
-        subprocess.call(['git', 'pull'])
-        os.chdir('..')
-    else:
-        print('Cloning repository at:', repoHttpUrl)
-        subprocess.call(['git', 'clone', repoHttpUrl])
-
-
 def tryHardLinkConfigFileIfRequired(configDirectoryLine, repoFileName):
-    configFileName = os.path.join(repoFileName, 'configFiles', configDirectoryLine.split(',')[0])
+    configFileName = os.path.join(repoFileName, 'config_files', configDirectoryLine.split(',')[0])
     configFileDst = configDirectoryLine.split(',')[1]
     configFileRequired = configDirectoryLine.split(',')[2]
 
@@ -86,9 +75,10 @@ def tryHardLinkConfigFileIfRequired(configDirectoryLine, repoFileName):
 
 def processConfigFiles(repoHttpUrl):
     repoFileName = os.path.splitext(os.path.basename(repoHttpUrl))[0]
-    pullConfigRepo(repoFileName, repoHttpUrl)
 
-    with open(os.path.join(repoFileName, 'configDirectory.csv')) as f:
+    pullOrCloneConfigRepo(repoFileName, repoHttpUrl)
+
+    with open(os.path.join(repoFileName, 'config_directory.csv')) as f:
         for configDirectoryLine in f:
             tryHardLinkConfigFileIfRequired(configDirectoryLine.strip(), repoFileName)
 
