@@ -1,6 +1,6 @@
 import os
 import subprocess
-from text_processing import evaluateEnvironmentVariables, printLine
+from text_processing import evaluateEnvironmentVariables
 
 def recursivelyCreateDirectory(currentDirname):
   if not os.path.isdir(currentDirname):
