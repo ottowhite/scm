@@ -2,7 +2,7 @@
 import os
 import sys
 
-from git_wrapper import pullOrCloneRepo
+from git_wrapper import synchronizeWithRepo
 from filesystem_wrapper import hardLinkConfigFile
 from text_processing import (
     getRepoNameFromGitUrl,
@@ -11,9 +11,8 @@ from text_processing import (
 )
 
 def main(repoHttpUrl):
-    repoName = getRepoNameFromGitUrl(repoHttpUrl)
     printTitle(f"Getting latest changes from {repoHttpUrl}")
-    pullOrCloneRepo(repoName, repoHttpUrl)
+    repoName = synchronizeWithRepo(repoHttpUrl)
 
     configDirectoryCsvPath = os.path.join(repoName, "config_directory.csv")
 

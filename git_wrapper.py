@@ -1,6 +1,13 @@
 import os
 
 from command_wrapper import runCommand
+from text_processing import getRepoNameFromGitUrl, printTitle
+
+def synchronizeWithRepo(repoHttpUrl):
+    repoName = getRepoNameFromGitUrl(repoHttpUrl)
+    pullOrCloneRepo(repoName, repoHttpUrl)
+
+    return repoName
 
 def pullOrCloneRepo(repoFileName, repoHttpUrl):
     if os.path.isdir(repoFileName):
