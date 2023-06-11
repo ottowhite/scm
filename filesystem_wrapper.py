@@ -10,14 +10,14 @@ def recursivelyCreateDirectory(currentDirname):
 def recursivelyCreateDirectoryForFile(filepath):
   recursivelyCreateDirectory(os.path.dirname(filepath))
 
-def clearOtherHardLinks(fileToClearHardLinks):
-  inodeNumber = runCommand(f"ls -i {fileToClearHardLinks}").split()[0]
+def clearOtherHardLinks(configFile):
+  inodeNumber = runCommand(f"ls -i {configFile.getSrcPath()}").split()[0]
 
   homeDirectory = evaluateEnvironmentVariables('~')
   hardLinkReferences = runCommand(f"find {homeDirectory} /etc -inum {inodeNumber} 2> /dev/null").split()
 
   for fileReference in hardLinkReferences:
-    if os.path.realpath(fileReference) == os.path.realpath(fileToClearHardLinks):
+    if os.path.realpath(fileReference) == os.path.realpath(configFile.getSrcPath()):
       print('\tRetaining', fileReference)
     else:
       print('\tDeleting ', fileReference)
@@ -33,13 +33,13 @@ def createHardLink(configFileSrcPath, configFileDstPath):
   # TODO: Get the prompt of this to print properly
   runCommand(f'sudo ln -i {configFileSrcPath} {configFileDstPath}')
 
-def hardLinkConfigFile(configFileSrcPath, configFileDstPath):
-  if os.path.isfile(configFileSrcPath):
-    print("1) Clearing residual hard links for", configFileSrcPath + '.')
-    clearOtherHardLinks(configFileSrcPath)
+def hardLinkConfigFile(configFile):
+  if os.path.isfile(configFile.getSrcPath()):
+    print("1) Clearing residual hard links for", configFile.getName() + '.')
+    clearOtherHardLinks(configFile)
     print()
 
     print("2) Creating hard link")
-    createHardLink(configFileSrcPath, configFileDstPath)
+    createHardLink(configFile.getSrcPath(), configFile.getDstPath())
   else:
-    print(configFileSrcPath, 'does not exist, skipping.')
+    print(configFile.getSrcPath(), 'does not exist, skipping.')
