@@ -23,23 +23,26 @@ def clearOtherHardLinks(configFile):
       print('\tDeleting ', fileReference)
       runCommand(f"sudo rm {fileReference}")
 
-def createHardLink(configFileSrcPath, configFileDstPath):
+def createHardLink(configFile):
   # TODO: Only use sudo if absolutely necessary
+  name = configFile.getName()
+  srcPath = configFile.getSrcPath()
+  dstPath = configFile.getDstPath()
 
-  recursivelyCreateDirectoryForFile(configFileDstPath)
+  recursivelyCreateDirectoryForFile(dstPath)
 
-  print(f"\t{configFileSrcPath} -> {configFileDstPath}")
+  print(f"\t{name} -> {dstPath}")
 
   # TODO: Get the prompt of this to print properly
-  runCommand(f'sudo ln -i {configFileSrcPath} {configFileDstPath}')
+  runCommand(f'sudo ln -i {srcPath} {dstPath}')
 
 def hardLinkConfigFile(configFile):
   if os.path.isfile(configFile.getSrcPath()):
-    print("1) Clearing residual hard links for", configFile.getName() + '.')
+    print("1) Clearing residual hard links for", configFile.getName())
     clearOtherHardLinks(configFile)
     print()
 
     print("2) Creating hard link")
-    createHardLink(configFile.getSrcPath(), configFile.getDstPath())
+    createHardLink(configFile)
   else:
     print(configFile.getSrcPath(), 'does not exist, skipping.')
