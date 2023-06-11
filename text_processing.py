@@ -27,3 +27,8 @@ def parseConfigDirectoryCsvLine(configDirectoryCsvLine):
 
 def evaluateEnvironmentVariables(inputString):
   return runCommand(f"eval \"echo {inputString}\"")
+
+def printTitle(title):
+	print("\n")
+	print(title)
+	printLine()

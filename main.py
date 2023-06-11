@@ -7,14 +7,12 @@ from filesystem_wrapper import hardLinkConfigFile
 from text_processing import (
     getRepoNameFromGitUrl,
     parseConfigDirectoryCsvLine,
-    printLine
+    printTitle
 )
 
 def main(repoHttpUrl):
     repoName = getRepoNameFromGitUrl(repoHttpUrl)
-    print("\n")
-    print(f"Getting latest changes from {repoHttpUrl}")
-    printLine()
+    printTitle(f"Getting latest changes from {repoHttpUrl}")
     pullOrCloneRepo(repoName, repoHttpUrl)
 
     configDirectoryCsvPath = os.path.join(repoName, "config_directory.csv")
@@ -29,15 +27,11 @@ def main(repoHttpUrl):
             configFileSrcPath = os.path.join(repoName, "config_files", configFileSrcName)
 
             if configFileRequired:
-              print("\n")
-              print(configFileSrcName)
-              printLine()
+              printTitle(configFileSrcName)
 
               hardLinkConfigFile(configFileSrcPath, configFileDstPath)
             else:
-              print("\n")
-              print(configFileSrcName, "(skipping)")
-              printLine()
+              printTitle(f"{configFileSrcName} (skipping)")
 
 if __name__ == '__main__':
     main(sys.argv[1])
