@@ -12,6 +12,9 @@ from text_processing import (
 
 def main(repoHttpUrl):
     repoName = getRepoNameFromGitUrl(repoHttpUrl)
+    print("\n")
+    print(f"Getting latest changes from {repoHttpUrl}")
+    printLine()
     pullOrCloneRepo(repoName, repoHttpUrl)
 
     configDirectoryCsvPath = os.path.join(repoName, "config_directory.csv")
