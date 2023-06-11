@@ -17,12 +17,15 @@ def parseConfigDirectoryCsvLine(configDirectoryCsvLine):
 
 	assert len(configDirectoryCsvLineValues) == 3
 
-	configFileName     = configDirectoryCsvLineValues[0]
-	configFileDstPath  = configDirectoryCsvLineValues[1]
-	configFileRequired = configDirectoryCsvLineValues[2]
+	configFileName     		 		 = configDirectoryCsvLineValues[0]
+	configFileDstPathWithVars  = configDirectoryCsvLineValues[1]
+	configFileRequired 			   = configDirectoryCsvLineValues[2]
 
 	return (
 		configFileName,
-		configFileDstPath,
+		evaluateEnvironmentVariables(configFileDstPathWithVars),
 		True if configFileRequired == 'y' else False
 	)
+
+def evaluateEnvironmentVariables(inputString):
+  return subprocess.getoutput(f"eval \"echo {inputString}\"")
