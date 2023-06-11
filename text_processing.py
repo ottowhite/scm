@@ -1,8 +1,9 @@
-import subprocess
 import os
 
+from command_wrapper import runCommand
+
 def printLine():
-	columns = os.getenv('COLUMNS', subprocess.check_output(['tput', 'cols']).decode().strip())
+	columns = os.getenv('COLUMNS', runCommand("tput cols").strip())
 	print('-' * int(columns))
 
 def getRepoNameFromGitUrl(repoHttpUrl):
@@ -25,4 +26,4 @@ def parseConfigDirectoryCsvLine(configDirectoryCsvLine):
 	)
 
 def evaluateEnvironmentVariables(inputString):
-  return subprocess.getoutput(f"eval \"echo {inputString}\"")
+  return runCommand(f"eval \"echo {inputString}\"")

@@ -1,5 +1,5 @@
 import os
-import subprocess
+from command_wrapper import runCommand
 from text_processing import evaluateEnvironmentVariables
 
 def recursivelyCreateDirectory(currentDirname):
@@ -11,16 +11,17 @@ def recursivelyCreateDirectoryForFile(filepath):
   recursivelyCreateDirectory(os.path.dirname(filepath))
 
 def clearOtherHardLinks(fileToClearHardLinks):
-  inodeNumber = subprocess.check_output(['ls', '-i', fileToClearHardLinks]).decode().split()[0]
+  inodeNumber = runCommand(f"ls -i {fileToClearHardLinks}").split()[0]
+
   homeDirectory = evaluateEnvironmentVariables('~')
-  hardLinkReferences = subprocess.getoutput(f"find {homeDirectory} /etc -inum {inodeNumber} 2> /dev/null").split()
+  hardLinkReferences = runCommand(f"find {homeDirectory} /etc -inum {inodeNumber} 2> /dev/null").split()
 
   for fileReference in hardLinkReferences:
     if os.path.realpath(fileReference) == os.path.realpath(fileToClearHardLinks):
       print('\tRetaining', fileReference)
     else:
       print('\tDeleting ', fileReference)
-      subprocess.getoutput(f"sudo rm {fileReference}")
+      runCommand(f"sudo rm {fileReference}")
 
 def createHardLink(configFileSrcPath, configFileDstPath):
   # TODO: Only use sudo if absolutely necessary
@@ -30,7 +31,7 @@ def createHardLink(configFileSrcPath, configFileDstPath):
   print(f"\t{configFileSrcPath} -> {configFileDstPath}")
 
   # TODO: Get the prompt of this to print properly
-  subprocess.getoutput(f'sudo ln -i {configFileSrcPath} {configFileDstPath}')
+  runCommand(f'sudo ln -i {configFileSrcPath} {configFileDstPath}')
 
 def hardLinkConfigFile(configFileSrcPath, configFileDstPath):
   if os.path.isfile(configFileSrcPath):
