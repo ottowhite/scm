@@ -4,10 +4,12 @@ import sys
 import subprocess
 
 from git_wrapper import pullOrCloneRepo
-from text_processing import \
-    printLine, \
-    getConfigDirectoryCsvPathFromRepoName, \
-    getRepoNameFromGitUrl
+from text_processing import (
+    printLine,
+    getConfigDirectoryCsvPathFromRepoName,
+    getRepoNameFromGitUrl,
+    parseConfigDirectoryCsvLine
+)
 
 def main(repoHttpUrl):
     repoName = getRepoNameFromGitUrl(repoHttpUrl)
@@ -18,15 +20,18 @@ def main(repoHttpUrl):
     with open(configDirectoryCsvPath) as configDirectoryCsv:
         for configDirectoryCsvLine in configDirectoryCsv:
 
-            configFileName     = configDirectoryCsvLine.split(',')[0]
-            configFileDstPath  = configDirectoryCsvLine.split(',')[1]
-            configFileRequired = configDirectoryCsvLine.split(',')[2]
+            (configFileSrcName, 
+             configFileDstPathWithVars, 
+             configFileRequired) = parseConfigDirectoryCsvLine(configDirectoryCsvLine)
+
+            configFileSrcPath = os.path.join(repoName, configFileSrcName)
+            # Evaluate environment variables like $HOME or ~
+            configFileDstPath = subprocess.getoutput(f"eval \"echo {configFileDstPathWithVars}\"")
 
             tryHardLinkConfigFileIfRequired(
-                os.path.join(repoName, configFileName), 
+                configFileSrcPath, 
                 configFileDstPath, 
-                configFileRequired
-            )
+                configFileRequired)
 
 def recursivelyCreateDirectory(currentDirname):
     if not os.path.isdir(currentDirname):
@@ -47,41 +52,41 @@ def clearOtherHardLinks(fileToClearHardLinks):
             print('Delete:', fileReference)
             subprocess.call(['sudo', 'rm', fileReference])
 
-def createHardLink(configFileName, configFileDstPath):
+def createHardLink(configFileSrcName, configFileDstPath):
     # TODO: Only use sudo if absolutely necessary
 
     # Evaluate ~
     configFileDstPath = os.path.expanduser(configFileDstPath)
 
     recursivelyCreateDirectoryForFile(configFileDstPath)
-    src = os.path.realpath(configFileName)
+    src = os.path.realpath(configFileSrcName)
 
     subprocess.call(['sudo', 'ln', '-i', src, configFileDstPath])
 
 
-def hardLinkConfigFile(configFileName, configFileDstPath):
-    if os.path.isfile(configFileName):
-        print("1) Clearing residual hard links for", configFileName + '.')
-        clearOtherHardLinks(configFileName)
+def hardLinkConfigFile(configFileSrcName, configFileDstPath):
+    if os.path.isfile(configFileSrcName):
+        print("1) Clearing residual hard links for", configFileSrcName + '.')
+        clearOtherHardLinks(configFileSrcName)
         print()
 
-        print("2) Creating hard link:", configFileName, '->', configFileDstPath)
-        createHardLink(configFileName, configFileDstPath)
+        print("2) Creating hard link:", configFileSrcName, '->', configFileDstPath)
+        createHardLink(configFileSrcName, configFileDstPath)
     else:
-        print(configFileName, 'does not exist, skipping.')
+        print(configFileSrcName, 'does not exist, skipping.')
 
 
-def tryHardLinkConfigFileIfRequired(configFilePath, configFileDstPath, configFileRequired):
-    if configFileRequired == 'y':
+def tryHardLinkConfigFileIfRequired(configFileSrcPath, configFileDstPath, configFileRequired):
+    if configFileRequired:
         printLine()
-        print('Processing:', configFilePath)
+        print('Processing:', configFileSrcPath)
         print('Destination:', configFileDstPath)
         printLine()
 
-        hardLinkConfigFile(configFilePath, configFileDstPath)
+        hardLinkConfigFile(configFileSrcPath, configFileDstPath)
     else:
         printLine()
-        print(configFilePath, 'not required, skipping.')
+        print(configFileSrcPath, 'not required, skipping.')
         printLine()
 
 if __name__ == '__main__':
