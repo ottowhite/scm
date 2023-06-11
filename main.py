@@ -4,7 +4,7 @@ import sys
 
 from git_wrapper import synchronizeWithRepo
 from filesystem_wrapper import hardLinkConfigFile
-from text_processing import parseConfigDirectoryCsvLine, printTitle
+from text_processing import enrichConfigDirectoryCsvTuple, parseConfigDirectoryCsvLine, printTitle
 
 def main(repoHttpUrl):
   printTitle(f"Getting latest changes from {repoHttpUrl}")
@@ -15,17 +15,22 @@ def main(repoHttpUrl):
   with open(configDirectoryCsvPath) as configDirectoryCsvFile:
     for configDirectoryCsvLine in configDirectoryCsvFile:
 
-      (configFileSrcName, 
+      configDirectoryCsvTuple = parseConfigDirectoryCsvLine(configDirectoryCsvLine)
+      configFileSrcName = configDirectoryCsvTuple[0]
+
+			# TODO: Make this more OOP
+      (configFileSrcPath, 
        configFileDstPath, 
-       configFileRequired) = parseConfigDirectoryCsvLine(configDirectoryCsvLine)
+       configFileRequired) = enrichConfigDirectoryCsvTuple(repoName, *configDirectoryCsvTuple)
+      
+      processConfigFile(configFileSrcName, configFileSrcPath, configFileDstPath, configFileRequired)
 
-      configFileSrcPath = os.path.join(repoName, "config_files", configFileSrcName)
-
-      if configFileRequired:
-        printTitle(configFileSrcName)
-        hardLinkConfigFile(configFileSrcPath, configFileDstPath)
-      else:
-        printTitle(f"{configFileSrcName} (skipping)")
+def processConfigFile(configFileSrcName, configFileSrcPath, configFileDstPath, configFileRequired):
+  if configFileRequired:
+    printTitle(configFileSrcName)
+    hardLinkConfigFile(configFileSrcPath, configFileDstPath)
+  else:
+    printTitle(f"{configFileSrcName} (skipping)")
 
 if __name__ == '__main__':
   main(sys.argv[1])
