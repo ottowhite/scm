@@ -2,6 +2,7 @@
 import os
 import sys
 from ConfigFile import ConfigFile
+from ConfigFileCollection import ConfigFileCollection
 
 from git_wrapper import synchronizeWithRepo
 from filesystem_wrapper import hardLinkConfigFile
@@ -11,13 +12,11 @@ def main(repoHttpUrl):
   printTitle(f"Getting latest changes from {repoHttpUrl}")
   repoName = synchronizeWithRepo(repoHttpUrl)
 
-  configDirectoryCsvPath = os.path.join(repoName, "config_directory.csv")
-
-  with open(configDirectoryCsvPath) as configDirectoryCsvFile:
-    for configDirectoryCsvLine in configDirectoryCsvFile:
-      configFile = ConfigFile(configDirectoryCsvLine, repoName)
-
-      processConfigFile(configFile)
+  configFileCollection = ConfigFileCollection(
+    os.path.join(repoName, "config_directory.csv"), 
+    repoName)
+  
+  configFileCollection.forEach(processConfigFile)
 
 def processConfigFile(configFile):
   if configFile.isRequired():
