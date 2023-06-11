@@ -3,7 +3,7 @@ import os
 
 def printLine():
 	columns = os.getenv('COLUMNS', subprocess.check_output(['tput', 'cols']).decode().strip())
-	print(' ' * int(columns))
+	print('-' * int(columns))
 
 def getRepoNameFromGitUrl(repoHttpUrl):
 	return os.path.splitext(os.path.basename(repoHttpUrl))[0]
