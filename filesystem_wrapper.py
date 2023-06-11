@@ -42,15 +42,3 @@ def hardLinkConfigFile(configFileSrcPath, configFileDstPath):
     createHardLink(configFileSrcPath, configFileDstPath)
   else:
     print(configFileSrcPath, 'does not exist, skipping.')
-
-def tryHardLinkConfigFileIfRequired(configFileSrcName, configFileSrcPath, configFileDstPath, configFileRequired):
-  if configFileRequired:
-    print("\n")
-    print(configFileSrcName)
-    printLine()
-
-    hardLinkConfigFile(configFileSrcPath, configFileDstPath)
-  else:
-    print("\n")
-    print(configFileSrcName, "(skipping)")
-    printLine()

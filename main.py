@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 import os
 import sys
-import subprocess
 
 from git_wrapper import pullOrCloneRepo
-from filesystem_wrapper import tryHardLinkConfigFileIfRequired
+from filesystem_wrapper import hardLinkConfigFile
 from text_processing import (
     getRepoNameFromGitUrl,
-    parseConfigDirectoryCsvLine
+    parseConfigDirectoryCsvLine,
+    printLine
 )
 
 def main(repoHttpUrl):
@@ -25,11 +25,16 @@ def main(repoHttpUrl):
 
             configFileSrcPath = os.path.join(repoName, "config_files", configFileSrcName)
 
-            tryHardLinkConfigFileIfRequired(
-                configFileSrcName,
-                configFileSrcPath, 
-                configFileDstPath, 
-                configFileRequired)
+            if configFileRequired:
+              print("\n")
+              print(configFileSrcName)
+              printLine()
+
+              hardLinkConfigFile(configFileSrcPath, configFileDstPath)
+            else:
+              print("\n")
+              print(configFileSrcName, "(skipping)")
+              printLine()
 
 if __name__ == '__main__':
     main(sys.argv[1])
