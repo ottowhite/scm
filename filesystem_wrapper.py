@@ -54,5 +54,5 @@ def tryHardLinkConfigFileIfRequired(configFileSrcPath, configFileDstPath, config
         hardLinkConfigFile(configFileSrcPath, configFileDstPath)
     else:
         printLine()
-        print(configFileSrcPath, 'not required, skipping.')
+        print(f"Skipping: {configFileSrcPath} -> {configFileDstPath}")
         printLine()
