@@ -17,15 +17,17 @@ def clearOtherHardLinks(fileToClearHardLinks):
 
   for fileReference in hardLinkReferences:
     if os.path.realpath(fileReference) == os.path.realpath(fileToClearHardLinks):
-      print('Retain:', fileReference)
+      print('\tRetaining', fileReference)
     else:
-      print('Delete:', fileReference)
-      subprocess.call(['sudo', 'rm', fileReference])
+      print('\tDeleting ', fileReference)
+      subprocess.getoutput(f"sudo rm {fileReference}")
 
 def createHardLink(configFileSrcPath, configFileDstPath):
   # TODO: Only use sudo if absolutely necessary
 
   recursivelyCreateDirectoryForFile(configFileDstPath)
+
+  print(f"\t{configFileSrcPath} -> {configFileDstPath}")
 
   # TODO: Get the prompt of this to print properly
   subprocess.getoutput(f'sudo ln -i {configFileSrcPath} {configFileDstPath}')
@@ -41,14 +43,14 @@ def hardLinkConfigFile(configFileSrcPath, configFileDstPath):
   else:
     print(configFileSrcPath, 'does not exist, skipping.')
 
-def tryHardLinkConfigFileIfRequired(configFileSrcPath, configFileDstPath, configFileRequired):
+def tryHardLinkConfigFileIfRequired(configFileSrcName, configFileSrcPath, configFileDstPath, configFileRequired):
   if configFileRequired:
-    printLine()
-    print(f"{configFileSrcPath} -> {configFileDstPath}")
+    print("\n")
+    print(configFileSrcName)
     printLine()
 
     hardLinkConfigFile(configFileSrcPath, configFileDstPath)
   else:
-    printLine()
-    print(f"Skipping: {configFileSrcPath} -> {configFileDstPath}")
+    print("\n")
+    print(configFileSrcName, "(skipping)")
     printLine()

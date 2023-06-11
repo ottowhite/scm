@@ -26,6 +26,7 @@ def main(repoHttpUrl):
             configFileSrcPath = os.path.join(repoName, "config_files", configFileSrcName)
 
             tryHardLinkConfigFileIfRequired(
+                configFileSrcName,
                 configFileSrcPath, 
                 configFileDstPath, 
                 configFileRequired)
