@@ -16,6 +16,7 @@ def clearOtherHardLinks(configFile):
   homeDirectory = evaluateEnvironmentVariables('~')
   hardLinkReferences = runCommand(f"find {homeDirectory} /etc -inum {inodeNumber} 2> /dev/null").split()
 
+
   for fileReference in hardLinkReferences:
     if os.path.realpath(fileReference) == os.path.realpath(configFile.getSrcPath()):
       print('\tRetaining', fileReference)
@@ -34,7 +35,7 @@ def createHardLink(configFile):
   print(f"\t{name} -> {dstPath}")
 
   # TODO: Get the prompt of this to print properly
-  runCommand(f'sudo ln -i {srcPath} {dstPath}')
+  runCommand(f'sudo ln -i {srcPath} {dstPath}', printOutput=True)
 
 def hardLinkConfigFile(configFile):
   if os.path.isfile(configFile.getSrcPath()):
